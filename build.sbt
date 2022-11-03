@@ -11,11 +11,16 @@ lazy val root = (project in file("."))
     name             := "meeting_rooms_renter",
     idePackagePrefix := Some("my.meetings_room_renter"),
     scalacOptions += "-Ymacro-annotations",
+    Test / fork := true,
     libraryDependencies ++= Seq(
-      "io.d11"               %% "zhttp"          % ZioHttpVersion,
-      "io.getquill"          %% "quill-jdbc-zio" % "4.6.0",
-      "io.github.kitlangton" %% "zio-magic"      % "0.3.12",
-      "dev.zio"              %% "zio-json"       % "0.3.0",
-      "org.postgresql"        % "postgresql"     % "42.3.1"
+      "io.d11"               %% "zhttp"                           % ZioHttpVersion,
+      "io.getquill"          %% "quill-jdbc-zio"                  % "4.6.0",
+      "io.github.kitlangton" %% "zio-magic"                       % "0.3.12",
+      "dev.zio"              %% "zio-json"                        % "0.3.0",
+      "org.postgresql"        % "postgresql"                      % "42.3.1",
+      "com.dimafeng"         %% "testcontainers-scala-mysql"      % "0.36.0"  % Test,
+      "com.dimafeng"         %% "testcontainers-scala-postgresql" % "0.40.11" % Test,
+      "com.dimafeng"         %% "testcontainers-scala-scalatest"  % "0.40.11" % Test,
+      "org.scalatest"        %% "scalatest"                       % "3.2.14"  % Test
     )
   )
