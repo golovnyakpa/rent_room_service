@@ -18,9 +18,10 @@ lazy val root = (project in file("."))
       "io.github.kitlangton" %% "zio-magic"                       % "0.3.12",
       "dev.zio"              %% "zio-json"                        % "0.3.0",
       "org.postgresql"        % "postgresql"                      % "42.3.1",
+      "org.liquibase"         % "liquibase-core"                  % "4.17.1",
       "com.dimafeng"         %% "testcontainers-scala-mysql"      % "0.36.0"  % Test,
       "com.dimafeng"         %% "testcontainers-scala-postgresql" % "0.40.11" % Test,
       "com.dimafeng"         %% "testcontainers-scala-scalatest"  % "0.40.11" % Test,
-      "org.scalatest"        %% "scalatest"                       % "3.2.14"  % Test
+      "org.scalatest"        %% "scalatest"                       % "3.2.14"  % Test,
     )
   )

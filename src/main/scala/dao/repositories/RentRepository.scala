@@ -1,20 +1,36 @@
 package my.meetings_room_renter
 package dao.repositories
 
+import dao.entities.Rent
+import db.Ctx._
+
 import io.getquill.context.ZioJdbc._
-import my.meetings_room_renter.dao.entities.Rent
-import zio.{ULayer, ZLayer}
+import zio._
+
+import java.sql.SQLException
+import javax.sql.DataSource
+
 
 object RentRepository {
 
-  trait Service {
-    def insert(rent: Rent): QIO[Rent]
+  trait RentRepositoryService {
+    def insert(rent: Rent): QIO[Unit]
   }
 
-  class RentRepositoryServiceImpl() extends Service {
-    override def insert(rent: Rent): QIO[Rent] = ???
+  class DBServiceImpl() extends RentRepositoryService {
+    val rentSchema = quote {
+      querySchema[Rent](""""rent"""")
+    }
+
+    override def insert(rent: Rent): QIO[Unit] = run(
+      rentSchema.insertValue(lift(rent))
+    ).map(_ => ())
   }
 
-  val live: ULayer[Service] = ZLayer.succeed(new RentRepositoryServiceImpl)
+  object RentRepositoryService {
+    def insert(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Unit] =
+      ZIO.serviceWithZIO[RentRepositoryService](_.insert(rent))
+  }
 
+  val live: ULayer[RentRepositoryService] = ZLayer.succeed(new DBServiceImpl)
 }

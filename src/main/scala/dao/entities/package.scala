@@ -4,5 +4,5 @@ package dao
 import java.time.LocalDateTime
 
 package object entities {
-  case class Rent(dttmStart: LocalDateTime, dttmEnd: LocalDateTime, renter: String)
+  case class Rent(dttmStart: Long, dttmEnd: Long, renter: String)
 }
