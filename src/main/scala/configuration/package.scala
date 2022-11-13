@@ -17,5 +17,8 @@ package object configuration {
 
   case class DbConfig(driver: String, url: String, user: String, password: String)
 
+  val sqlStateToTextMapping: Map[String, String] = Map(
+    "23503" -> "Rent failed. Such room doesn't exists"
+  )
 
 }

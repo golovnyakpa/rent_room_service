@@ -1,7 +1,7 @@
 package my.meetings_room_renter
 package api
 
-import my.meetings_room_renter.api.RequestHandlers.parseRequest
+import my.meetings_room_renter.utils.RequestHandlers.parseRequest
 import my.meetings_room_renter.dao.entities.{Rent, Room}
 import my.meetings_room_renter.dao.repositories.RoomRepository
 import my.meetings_room_renter.serde._
@@ -30,13 +30,8 @@ object RentRoomApi {
     RentRoomService
       .rentRoom(newRent)
       .flatMap {
-        case Some(value) => ZIO.succeed(Response.text(s"New rent for room ${newRent.room} added"))
-        case None =>
-          ZIO.succeed(
-            Response
-              .text("This room is not available at this time")
-              .setStatus(Status.BadRequest)
-          )
+        case Left(value)  => ZIO.succeed(Response.text(value))
+        case Right(value) => ZIO.succeed(Response.text(value).setStatus(Status.BadRequest))
       }
 
   def roomApi(authed: Ref[List[String]]) = Http.collectZIO[Request] {
