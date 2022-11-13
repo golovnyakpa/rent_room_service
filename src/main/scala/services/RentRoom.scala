@@ -16,7 +16,7 @@ object RentRoom {
   trait RentRoomService {
     def addNewRoom(room: Room): ZIO[DataSource with RentRepositoryService, SQLException, Boolean]
     def listAllRooms(): ZIO[DataSource with RentRepositoryService, SQLException, List[Room]]
-    def rentRoom(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Option[Long]]
+    def rentRoom(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Option[Unit]]
   }
 
   class RentRoomServiceImpl extends RentRoomService {
@@ -29,10 +29,10 @@ object RentRoom {
     override def listAllRooms(): ZIO[DataSource with RentRepositoryService, SQLException, List[Room]] =
       RentRepositoryService.list()
 
-    override def rentRoom(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Option[Long]] =
+    override def rentRoom(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Option[Unit]] =
       getRoomFromFutureRentsInInterval(rent)
         .flatMap(opt =>
-          if (opt.isEmpty) insertRent(rent).map(res => Some(res))
+          if (opt.isEmpty) insertRent(rent).map(Some(_))
           else ZIO.succeed(None)
         )
   }
@@ -46,7 +46,7 @@ object RentRoom {
 
     def rentRoom(
       rent: Rent
-    ): ZIO[DataSource with RentRepositoryService with RentRoomService, SQLException, Option[Long]] =
+    ): ZIO[DataSource with RentRepositoryService with RentRoomService, SQLException, Option[Unit]] =
       ZIO.serviceWithZIO[RentRoomService](_.rentRoom(rent))
   }
 

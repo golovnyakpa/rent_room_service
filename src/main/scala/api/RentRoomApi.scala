@@ -24,6 +24,21 @@ object RentRoomApi {
         else ZIO.succeed(Response.text("Such room already exists").setStatus(Status.BadRequest))
       )
 
+  private def addNewRentIfPossible(
+    newRent: Rent
+  ): ZIO[DataSource with RoomRepository.RentRepositoryService with RentRoomService, SQLException, Response] =
+    RentRoomService
+      .rentRoom(newRent)
+      .flatMap {
+        case Some(value) => ZIO.succeed(Response.text(s"New rent for room ${newRent.room} added"))
+        case None =>
+          ZIO.succeed(
+            Response
+              .text("This room is not available at this time")
+              .setStatus(Status.BadRequest)
+          )
+      }
+
   def roomApi(authed: Ref[List[String]]) = Http.collectZIO[Request] {
     case req @ Method.POST -> Path.root / "rooms" =>
       parseRequest[Room](req).foldZIO(
@@ -35,10 +50,7 @@ object RentRoomApi {
     case req @ Method.POST -> Path.root / "rents" =>
       parseRequest[Rent](req).foldZIO(
         err => ZIO.succeed(Response.text(err.toString).setStatus(Status.BadRequest)),
-        newRent =>
-          RentRoomService
-            .rentRoom(newRent)
-            .flatMap(_ => ZIO.succeed(Response.text("New rent added!").setStatus(Status.Ok)))
+        newRent => addNewRentIfPossible(newRent)
       )
   }
 
