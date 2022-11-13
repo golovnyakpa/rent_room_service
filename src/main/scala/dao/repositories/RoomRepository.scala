@@ -1,6 +1,7 @@
 package my.meetings_room_renter
 package dao.repositories
 
+import io.getquill.Quoted
 import io.getquill.context.ZioJdbc._
 import my.meetings_room_renter.dao.entities.{Rent, Room}
 import my.meetings_room_renter.db.Ctx._
@@ -18,6 +19,7 @@ object RoomRepository {
     def listRooms: QIO[List[Room]]
     def insertRent(rent: Rent): QIO[Unit]
     def getRoomFromFutureRentsInInterval(rent: Rent): ZIO[DataSource, SQLException, Option[String]]
+    def listFutureRents: QIO[List[Rent]]
   }
 
   class DBServiceImpl() extends RentRepositoryService {
@@ -41,13 +43,13 @@ object RoomRepository {
     override def listRooms: QIO[List[Room]] = run(roomsSchema)
 
     private implicit class RichDateTime(a: LocalDateTime) {
-      def <=(b: LocalDateTime) = quote(sql"""$a <= $b""".as[Boolean])
-      def >=(b: LocalDateTime) = quote(sql"""$a >= $b""".as[Boolean])
-      def <(b: LocalDateTime) = quote(sql"""$a < $b""".as[Boolean])
-      def >(b: LocalDateTime) = quote(sql"""$a > $b""".as[Boolean])
+      def <=(b: LocalDateTime): Quoted[Boolean] = quote(sql"""$a <= $b""".as[Boolean])
+      def >=(b: LocalDateTime): Quoted[Boolean] = quote(sql"""$a >= $b""".as[Boolean])
+      def <(b: LocalDateTime): Quoted[Boolean]  = quote(sql"""$a < $b""".as[Boolean])
+      def >(b: LocalDateTime): Quoted[Boolean]  = quote(sql"""$a > $b""".as[Boolean])
     }
 
-    override def getRoomFromFutureRentsInInterval(rent: Rent): ZIO[DataSource, SQLException, Option[String]] = {
+    override def getRoomFromFutureRentsInInterval(rent: Rent): ZIO[DataSource, SQLException, Option[String]] =
       run(
         futureRentsSchema
           .filter(_.room == lift(rent.room))
@@ -57,9 +59,10 @@ object RoomRepository {
           )
           .map(_.room)
       ).map(_.headOption)
-    }
 
     override def insertRent(rent: Rent): QIO[Unit] = run(futureRentsSchema.insertValue(lift(rent))).unit
+
+    override def listFutureRents: QIO[List[Rent]] = run(futureRentsSchema)
   }
 
   object RentRepositoryService {
@@ -69,7 +72,7 @@ object RoomRepository {
     def get(room: Room): ZIO[DataSource with RentRepositoryService, SQLException, Option[Room]] =
       ZIO.serviceWithZIO[RentRepositoryService](_.getRoom(room))
 
-    def list(): ZIO[DataSource with RentRepositoryService, SQLException, List[Room]] =
+    def listRooms(): ZIO[DataSource with RentRepositoryService, SQLException, List[Room]] =
       ZIO.serviceWithZIO[RentRepositoryService](_.listRooms)
 
     def insertRent(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Unit] =
@@ -79,6 +82,9 @@ object RoomRepository {
       rent: Rent
     ): ZIO[DataSource with RentRepositoryService, SQLException, Option[String]] =
       ZIO.serviceWithZIO[RentRepositoryService](_.getRoomFromFutureRentsInInterval(rent))
+
+    def listFutureRents(): ZIO[DataSource with RentRepositoryService, SQLException, List[Rent]] =
+      ZIO.serviceWithZIO[RentRepositoryService](_.listFutureRents)
   }
 
   val live: ULayer[RentRepositoryService] = ZLayer.succeed(new DBServiceImpl)

@@ -4,7 +4,10 @@ package services
 import my.meetings_room_renter.configuration.sqlStateToTextMapping
 import my.meetings_room_renter.dao.entities.{Rent, Room}
 import my.meetings_room_renter.dao.repositories.RoomRepository.RentRepositoryService
-import my.meetings_room_renter.dao.repositories.RoomRepository.RentRepositoryService.{getRoomFromFutureRentsInInterval, insertRent}
+import my.meetings_room_renter.dao.repositories.RoomRepository.RentRepositoryService.{
+  getRoomFromFutureRentsInInterval,
+  insertRent
+}
 import my.meetings_room_renter.utils.MessagesGenerator.makeSuccessfulRentNotification
 import zio._
 
@@ -16,6 +19,7 @@ object RentRoom {
     def addNewRoom(room: Room): ZIO[DataSource with RentRepositoryService, SQLException, Boolean]
     def listAllRooms(): ZIO[DataSource with RentRepositoryService, SQLException, List[Room]]
     def rentRoom(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Either[String, String]]
+    def listFutureRents(): ZIO[DataSource with RentRepositoryService, SQLException, List[Rent]]
   }
 
   class RentRoomServiceImpl extends RentRoomService {
@@ -26,7 +30,10 @@ object RentRoom {
       }
 
     override def listAllRooms(): ZIO[DataSource with RentRepositoryService, SQLException, List[Room]] =
-      RentRepositoryService.list()
+      RentRepositoryService.listRooms()
+
+    override def listFutureRents(): ZIO[DataSource with RentRepositoryService, SQLException, List[Rent]] =
+      RentRepositoryService.listFutureRents()
 
     def rentRoom(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Either[String, String]] =
       getRoomFromFutureRentsInInterval(rent)
@@ -35,8 +42,7 @@ object RentRoom {
             insertRent(rent)
               .fold(
                 e => Left(s"${sqlStateToTextMapping.getOrElse(e.getSQLState, "Unknown error")}"),
-                _ =>
-                  Right(makeSuccessfulRentNotification(rent))
+                _ => Right(makeSuccessfulRentNotification(rent))
               )
           } else {
             ZIO.succeed(Right("Rent failed. This time was already booked."))
@@ -55,6 +61,9 @@ object RentRoom {
       rent: Rent
     ): ZIO[DataSource with RentRepositoryService with RentRoomService, SQLException, Either[String, String]] =
       ZIO.serviceWithZIO[RentRoomService](_.rentRoom(rent))
+
+    def listFutureRents: ZIO[DataSource with RentRepositoryService with RentRoomService, SQLException, List[Rent]] =
+      ZIO.serviceWithZIO[RentRoomService](_.listFutureRents())
   }
 
   val live: ULayer[RentRoomServiceImpl] = ZLayer.succeed(new RentRoomServiceImpl)

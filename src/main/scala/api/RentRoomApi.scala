@@ -47,6 +47,8 @@ object RentRoomApi {
         err => ZIO.succeed(Response.text(err.toString).setStatus(Status.BadRequest)),
         newRent => addNewRentIfPossible(newRent)
       )
+    case Method.GET -> Path.root / "rents" =>
+      RentRoomService.listFutureRents.flatMap(lst => ZIO.succeed(Response.text(lst.mkString(", "))))
   }
 
   def rentRoomApi(authedUsers: Ref[List[String]]) =
