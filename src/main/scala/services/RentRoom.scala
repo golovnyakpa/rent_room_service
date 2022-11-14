@@ -2,12 +2,8 @@ package my.meetings_room_renter
 package services
 
 import my.meetings_room_renter.configuration.sqlStateToTextMapping
-import my.meetings_room_renter.dao.entities.{Rent, Room}
+import my.meetings_room_renter.dao.entities.{Rent, Room, UpdatedRent}
 import my.meetings_room_renter.dao.repositories.RoomRepository.RentRepositoryService
-import my.meetings_room_renter.dao.repositories.RoomRepository.RentRepositoryService.{
-  getRoomFromFutureRentsInInterval,
-  insertRent
-}
 import my.meetings_room_renter.utils.MessagesGenerator.makeSuccessfulRentNotification
 import zio._
 
@@ -20,15 +16,18 @@ object RentRoom {
     def listAllRooms(): ZIO[DataSource with RentRepositoryService, SQLException, List[Room]]
     def rentRoom(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Either[String, String]]
     def listFutureRents(): ZIO[DataSource with RentRepositoryService, SQLException, List[Rent]]
+    def updateRent(updatedRent: UpdatedRent): ZIO[DataSource with RentRepositoryService, SQLException, Either[String, Long]]
   }
 
   class RentRoomServiceImpl extends RentRoomService {
     override def addNewRoom(room: Room): ZIO[DataSource with RentRepositoryService, SQLException, Boolean] =
-      RentRepositoryService.get(room).flatMap { opt =>
-        if (opt.isEmpty) RentRepositoryService.insert(room).zipRight(ZIO.succeed(true)) // todo refactor it
+      RentRepositoryService.getRoom(room).flatMap { opt =>
+        if (opt.isEmpty) RentRepositoryService.insertRoom(room).zipRight(ZIO.succeed(true)) // todo refactor it
         else ZIO.succeed(false)
       }
 
+    // in such simple case may be it's better to use RentRepositoryService in the api
+    // directly without this proxy service
     override def listAllRooms(): ZIO[DataSource with RentRepositoryService, SQLException, List[Room]] =
       RentRepositoryService.listRooms()
 
@@ -36,10 +35,12 @@ object RentRoom {
       RentRepositoryService.listFutureRents()
 
     def rentRoom(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Either[String, String]] =
-      getRoomFromFutureRentsInInterval(rent)
+      RentRepositoryService
+        .getRoomFromFutureRentsInInterval(rent)
         .flatMap(opt =>
           if (opt.isEmpty) {
-            insertRent(rent)
+            RentRepositoryService
+              .insertRent(rent)
               .fold(
                 e => Left(s"${sqlStateToTextMapping.getOrElse(e.getSQLState, "Unknown error")}"),
                 _ => Right(makeSuccessfulRentNotification(rent))
@@ -48,6 +49,26 @@ object RentRoom {
             ZIO.succeed(Right("Rent failed. This time was already booked."))
           }
         )
+
+    def updateRent(
+      updatedRent: UpdatedRent
+    ): ZIO[DataSource with RentRepositoryService, SQLException, Either[String, Long]] = {
+      val newRent =
+        Rent(updatedRent.oldRent.room, updatedRent.dttmStart, updatedRent.dttmEnd, updatedRent.oldRent.renter)
+
+      RentRepositoryService.getRoomFromFutureRentsInInterval(newRent).flatMap { opt =>
+        if (opt.isEmpty) {
+          RentRepositoryService
+            .updateRent(updatedRent.oldRent, newRent)
+            .fold(
+              e => Left(s"${sqlStateToTextMapping.getOrElse(e.getSQLState, e.getMessage)}"),
+              res => Right(res)
+            )
+        } else {
+          ZIO.succeed(Left("This time is not available for this room")) // todo think about this (HTTP codes spec)
+        }
+      }
+    }
   }
 
   object RentRoomService {
@@ -64,6 +85,9 @@ object RentRoom {
 
     def listFutureRents: ZIO[DataSource with RentRepositoryService with RentRoomService, SQLException, List[Rent]] =
       ZIO.serviceWithZIO[RentRoomService](_.listFutureRents())
+
+    def updateRent(updatedRent: UpdatedRent): ZIO[DataSource with RentRepositoryService with RentRoomService, SQLException, Either[String, Long]] =
+      ZIO.serviceWithZIO[RentRoomService](_.updateRent(updatedRent))
   }
 
   val live: ULayer[RentRoomServiceImpl] = ZLayer.succeed(new RentRoomServiceImpl)

@@ -20,6 +20,8 @@ object RoomRepository {
     def insertRent(rent: Rent): QIO[Unit]
     def getRoomFromFutureRentsInInterval(rent: Rent): ZIO[DataSource, SQLException, Option[String]]
     def listFutureRents: QIO[List[Rent]]
+    def getRent(rent: Rent): QIO[Option[Rent]]
+    def updateRent(oldRent: Rent, newRent: Rent): ZIO[DataSource, SQLException, Long]
   }
 
   class DBServiceImpl() extends RentRepositoryService {
@@ -43,10 +45,10 @@ object RoomRepository {
     override def listRooms: QIO[List[Room]] = run(roomsSchema)
 
     private implicit class RichDateTime(a: LocalDateTime) {
-      def <=(b: LocalDateTime): Quoted[Boolean] = quote(sql"""$a <= $b""".as[Boolean])
-      def >=(b: LocalDateTime): Quoted[Boolean] = quote(sql"""$a >= $b""".as[Boolean])
-      def <(b: LocalDateTime): Quoted[Boolean]  = quote(sql"""$a < $b""".as[Boolean])
-      def >(b: LocalDateTime): Quoted[Boolean]  = quote(sql"""$a > $b""".as[Boolean])
+      def <=(b: LocalDateTime) = quote(sql"""$a <= $b""".as[Boolean])
+      def >=(b: LocalDateTime) = quote(sql"""$a >= $b""".as[Boolean])
+      def <(b: LocalDateTime)  = quote(sql"""$a < $b""".as[Boolean])
+      def >(b: LocalDateTime)  = quote(sql"""$a > $b""".as[Boolean])
     }
 
     override def getRoomFromFutureRentsInInterval(rent: Rent): ZIO[DataSource, SQLException, Option[String]] =
@@ -63,13 +65,32 @@ object RoomRepository {
     override def insertRent(rent: Rent): QIO[Unit] = run(futureRentsSchema.insertValue(lift(rent))).unit
 
     override def listFutureRents: QIO[List[Rent]] = run(futureRentsSchema)
+
+    override def getRent(rent: Rent): QIO[Option[Rent]] = run(
+      futureRentsSchema
+        .filter(_.room == lift(rent.room))
+        .filter(_.dttmStart == lift(rent.dttmStart))
+        .filter(_.dttmEnd == lift(rent.dttmEnd))
+        .filter(_.renter == lift(rent.renter))
+    ).map(_.headOption)
+
+    override def updateRent(oldRent: Rent, newRent: Rent): ZIO[DataSource, SQLException, Long] =
+      run(
+        futureRentsSchema
+          .filter(_.room == lift(oldRent.room))
+          .filter(_.dttmStart == lift(oldRent.dttmStart))
+          .filter(_.dttmEnd == lift(oldRent.dttmEnd))
+          .filter(_.renter == lift(oldRent.renter))
+          .update(r => r.dttmStart -> lift(newRent.dttmStart), r => r.dttmEnd -> lift(newRent.dttmEnd))
+      )
   }
 
+  // @accessible macros does not work, that's why forced to do this dummy job :(
   object RentRepositoryService {
-    def insert(room: Room): ZIO[DataSource with RentRepositoryService, SQLException, Unit] =
+    def insertRoom(room: Room): ZIO[DataSource with RentRepositoryService, SQLException, Unit] =
       ZIO.serviceWithZIO[RentRepositoryService](_.insertNewRoom(room))
 
-    def get(room: Room): ZIO[DataSource with RentRepositoryService, SQLException, Option[Room]] =
+    def getRoom(room: Room): ZIO[DataSource with RentRepositoryService, SQLException, Option[Room]] =
       ZIO.serviceWithZIO[RentRepositoryService](_.getRoom(room))
 
     def listRooms(): ZIO[DataSource with RentRepositoryService, SQLException, List[Room]] =
@@ -85,6 +106,12 @@ object RoomRepository {
 
     def listFutureRents(): ZIO[DataSource with RentRepositoryService, SQLException, List[Rent]] =
       ZIO.serviceWithZIO[RentRepositoryService](_.listFutureRents)
+
+    def getRent(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Option[Rent]] =
+      ZIO.serviceWithZIO[RentRepositoryService](_.getRent(rent))
+
+    def updateRent(oldRent: Rent, newRent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Long] =
+      ZIO.serviceWithZIO[RentRepositoryService](_.updateRent(oldRent, newRent))
   }
 
   val live: ULayer[RentRepositoryService] = ZLayer.succeed(new DBServiceImpl)

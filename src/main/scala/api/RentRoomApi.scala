@@ -1,11 +1,11 @@
 package my.meetings_room_renter
 package api
 
-import my.meetings_room_renter.utils.RequestHandlers.parseRequest
-import my.meetings_room_renter.dao.entities.{Rent, Room}
+import my.meetings_room_renter.dao.entities.{Rent, Room, UpdatedRent}
 import my.meetings_room_renter.dao.repositories.RoomRepository
 import my.meetings_room_renter.serde._
 import my.meetings_room_renter.services.RentRoom.RentRoomService
+import my.meetings_room_renter.utils.RequestHandlers.parseRequest
 import zhttp.http._
 import zio._
 
@@ -20,7 +20,7 @@ object RentRoomApi {
     RentRoomService
       .addNewRoom(newRoom)
       .flatMap(isInserted =>
-        if (isInserted) ZIO.succeed(Response.text(s"${newRoom.roomNumber} inserted"))
+        if (isInserted) ZIO.succeed(Response.text(s"${newRoom.roomNumber} inserted")) // todo refactor to correct code
         else ZIO.succeed(Response.text("Such room already exists").setStatus(Status.BadRequest))
       )
 
@@ -33,6 +33,22 @@ object RentRoomApi {
         case Left(value)  => ZIO.succeed(Response.text(value))
         case Right(value) => ZIO.succeed(Response.text(value).setStatus(Status.BadRequest))
       }
+
+  private def updateRentIfPossible(updatedRent: UpdatedRent) =
+    RentRoomService.updateRent(updatedRent).flatMap {
+      case Left(value) => ZIO.succeed(Response.text(value))
+      case Right(value) =>
+        value match {
+          case 1 => ZIO.succeed(Response.text("Successfully updated"))
+          case 0 =>
+            ZIO.succeed(
+              Response
+                .text("Your rent is not found. Such room doesn't exists or wasn't rent for this tome")
+                .setStatus(Status.NotFound)
+            )
+          case r @ _ => ZIO.succeed(Response.text(s"$r rows were updated. That's wired").setStatus(Status.NotFound))
+        }
+    }
 
   def roomApi(authed: Ref[List[String]]) = Http.collectZIO[Request] {
     case req @ Method.POST -> Path.root / "rooms" =>
@@ -49,6 +65,11 @@ object RentRoomApi {
       )
     case Method.GET -> Path.root / "rents" =>
       RentRoomService.listFutureRents.flatMap(lst => ZIO.succeed(Response.text(lst.mkString(", "))))
+    case req @ Method.PUT -> Path.root / "rents" =>
+      parseRequest[UpdatedRent](req).foldZIO(
+        err => ZIO.succeed(Response.text(err.toString).setStatus(Status.BadRequest)),
+        updatedRent => updateRentIfPossible(updatedRent)
+      )
   }
 
   def rentRoomApi(authedUsers: Ref[List[String]]) =

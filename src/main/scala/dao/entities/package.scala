@@ -11,4 +11,10 @@ package object entities {
     dttmEnd: LocalDateTime,
     renter: String
   )
+  case class UpdatedRent(
+    oldRent: Rent,
+    dttmStart: LocalDateTime,
+    dttmEnd: LocalDateTime,
+    renter: String
+  )
 }
