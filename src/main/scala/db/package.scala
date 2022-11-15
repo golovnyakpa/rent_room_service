@@ -13,6 +13,6 @@ package object db {
 
   def hikariDS: HikariDataSource = JdbcContextConfig(LoadConfig("db")).dataSource
 
-  val zioDS: ZLayer[Any, Throwable, DataSource] = ZLayer.succeed(hikariDS)
+  val zioDS: ULayer[DataSource] = ZLayer.succeed(hikariDS)
 
 }

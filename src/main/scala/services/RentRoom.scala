@@ -56,6 +56,7 @@ object RentRoom {
       val newRent =
         Rent(updatedRent.oldRent.room, updatedRent.dttmStart, updatedRent.dttmEnd, updatedRent.oldRent.renter)
 
+      // todo transactional here
       RentRepositoryService.getRoomFromFutureRentsInInterval(newRent).flatMap { opt =>
         if (opt.isEmpty) {
           RentRepositoryService

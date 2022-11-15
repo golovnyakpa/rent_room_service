@@ -74,7 +74,7 @@ object RoomRepository {
         .filter(_.renter == lift(rent.renter))
     ).map(_.headOption)
 
-    override def updateRent(oldRent: Rent, newRent: Rent): ZIO[DataSource, SQLException, Long] =
+    override def updateRent(oldRent: Rent, newRent: Rent): ZIO[DataSource, SQLException, Long] = {
       run(
         futureRentsSchema
           .filter(_.room == lift(oldRent.room))
@@ -83,6 +83,7 @@ object RoomRepository {
           .filter(_.renter == lift(oldRent.renter))
           .update(r => r.dttmStart -> lift(newRent.dttmStart), r => r.dttmEnd -> lift(newRent.dttmEnd))
       )
+    }
   }
 
   // @accessible macros does not work, that's why forced to do this dummy job :(
