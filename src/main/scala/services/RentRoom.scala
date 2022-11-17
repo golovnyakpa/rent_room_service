@@ -17,6 +17,7 @@ object RentRoom {
     def rentRoom(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Either[String, String]]
     def listFutureRents(): ZIO[DataSource with RentRepositoryService, SQLException, List[Rent]]
     def updateRent(updatedRent: UpdatedRent): ZIO[DataSource with RentRepositoryService, SQLException, Either[String, Long]]
+    def deleteRent(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Long]
   }
 
   class RentRoomServiceImpl extends RentRoomService {
@@ -33,6 +34,9 @@ object RentRoom {
 
     override def listFutureRents(): ZIO[DataSource with RentRepositoryService, SQLException, List[Rent]] =
       RentRepositoryService.listFutureRents()
+
+    override def deleteRent(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Long] =
+      RentRepositoryService.deleteRent(rent)
 
     def rentRoom(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Either[String, String]] =
       RentRepositoryService
@@ -89,6 +93,9 @@ object RentRoom {
 
     def updateRent(updatedRent: UpdatedRent): ZIO[DataSource with RentRepositoryService with RentRoomService, SQLException, Either[String, Long]] =
       ZIO.serviceWithZIO[RentRoomService](_.updateRent(updatedRent))
+
+    def deleteRent(rent: Rent): ZIO[DataSource with RentRepositoryService with RentRoomService, SQLException, Long] =
+      ZIO.serviceWithZIO[RentRoomService](_.deleteRent(rent))
   }
 
   val live: ULayer[RentRoomServiceImpl] = ZLayer.succeed(new RentRoomServiceImpl)

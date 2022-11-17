@@ -101,7 +101,27 @@ object UserServiceSpec extends ZIOSpecDefault {
               data.contains(TestData.nonoverlappingRents(2)) &&
               data.contains(TestData.updatedRent.oldRent)
           )
-        } @@ cleanSchema  @@ TestAspect.nonFlaky @@ TestAspect.repeats(2)
+        } @@ cleanSchema @@ TestAspect.nonFlaky @@ TestAspect.repeats(2)
+      ),
+      suite("Delete function")(
+        test("Delete existing rent") {
+          for {
+            rentRoomService <- ZIO.service[RentRoomService]
+            _               <- rentRoomService.addNewRoom(TestData.rooms.head)
+            _               <- rentRoomService.rentRoom(TestData.nonoverlappingRents.head)
+            deletedLinesNum <- rentRoomService.deleteRent(TestData.nonoverlappingRents.head)
+            res             <- rentRoomService.listFutureRents()
+          } yield assertTrue(res.isEmpty && deletedLinesNum == 1L)
+        } @@ cleanSchema,
+        test("Don't delete invalid rent") {
+          for {
+            rentRoomService <- ZIO.service[RentRoomService]
+            _ <- rentRoomService.addNewRoom(TestData.rooms.head)
+            _ <- rentRoomService.rentRoom(TestData.nonoverlappingRents(1))
+            deletedLinesNum <- rentRoomService.deleteRent(TestData.nonoverlappingRents.head)
+            res <- rentRoomService.listFutureRents()
+          } yield assertTrue(res.nonEmpty && deletedLinesNum == 0L)
+        } @@ cleanSchema
       )
     ).provideShared(layer) @@ TestAspect.sequential
 

@@ -22,6 +22,7 @@ object RoomRepository {
     def listFutureRents: QIO[List[Rent]]
     def getRent(rent: Rent): QIO[Option[Rent]]
     def updateRent(oldRent: Rent, newRent: Rent): ZIO[DataSource, SQLException, Long]
+    def deleteRent(rent: Rent): ZIO[DataSource, SQLException, Long]
   }
 
   class DBServiceImpl() extends RentRepositoryService {
@@ -84,6 +85,18 @@ object RoomRepository {
           .update(r => r.dttmStart -> lift(newRent.dttmStart), r => r.dttmEnd -> lift(newRent.dttmEnd))
       )
     }
+
+    def deleteRent(rent: Rent): ZIO[DataSource, SQLException, Long] = {
+      run(
+        futureRentsSchema
+          .filter(_.room == lift(rent.room))
+          .filter(_.dttmStart == lift(rent.dttmStart))
+          .filter(_.dttmEnd == lift(rent.dttmEnd))
+          .filter(_.renter == lift(rent.renter))
+          .delete
+      )
+    }
+
   }
 
   // @accessible macros does not work, that's why forced to do this dummy job :(
@@ -113,6 +126,9 @@ object RoomRepository {
 
     def updateRent(oldRent: Rent, newRent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Long] =
       ZIO.serviceWithZIO[RentRepositoryService](_.updateRent(oldRent, newRent))
+
+    def deleteRent(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Long] =
+      ZIO.serviceWithZIO[RentRepositoryService](_.deleteRent(rent))
   }
 
   val live: ULayer[RentRepositoryService] = ZLayer.succeed(new DBServiceImpl)
