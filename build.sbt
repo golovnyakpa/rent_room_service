@@ -9,7 +9,7 @@ lazy val root = (project in file("."))
   .settings(
     name             := "meeting_rooms_renter",
     idePackagePrefix := Some("my.meetings_room_renter"),
-    scalacOptions += "-Ymacro-annotations",
+    scalacOptions ++= Seq("-Ymacro-annotations", "-deprecation"),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
     Test / fork := true,
     libraryDependencies ++= Seq(

@@ -30,8 +30,8 @@ object RentRoomApi {
     RentRoomService
       .rentRoom(newRent)
       .flatMap {
-        case Left(value)  => ZIO.succeed(Response.text(value))
-        case Right(value) => ZIO.succeed(Response.text(value).setStatus(Status.BadRequest))
+        case Left(value)  => ZIO.succeed(Response.text(value).setStatus(Status.BadRequest))
+        case Right(value) => ZIO.succeed(Response.text(value))
       }
 
   private def updateRentIfPossible(updatedRent: UpdatedRent) =

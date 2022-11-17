@@ -6,24 +6,21 @@ import org.testcontainers.utility.MountableFile
 import zio.test.TestAspect
 import zio.{Console, TaskLayer, ZIO, ZLayer}
 
+import scala.reflect.ClassTag
+
 object TestContainer {
 
   lazy val dockerContainerLayer: TaskLayer[PostgreSQLContainer] =
-    ZLayer.fromZIO {
+    ZLayer {
       for {
         pg <- ZIO.attempt(new PostgreSQLContainer())
         _ <- ZIO.attempt(
                pg.container.withCopyFileToContainer(
-                 MountableFile.forHostPath("C:\\Users\\Synaps\\IdeaProjects\\meeting_rooms_renter\\ddl.sql"),
+                 MountableFile.forClasspathResource("ddl.sql"),
                  "/docker-entrypoint-initdb.d/init.sql"
                )
              )
-        _ <- ZIO.attempt(
-               pg.container.withCopyFileToContainer(
-                 MountableFile.forHostPath("C:\\Users\\Synaps\\IdeaProjects\\meeting_rooms_renter\\ddl.sql"),
-                 "/"
-               )
-             )
+        _ <- ZIO.attempt(pg.container.withCopyFileToContainer(MountableFile.forClasspathResource("ddl.sql"), "/"))
         _ <- ZIO.attempt(pg.start()).onError(e => Console.printLine(e.prettyPrint).orDie)
       } yield pg
     }
@@ -44,29 +41,27 @@ object TestContainer {
       } yield ds
     }
 
-  def cleanSchema() = {
-    val cmd = raw"psql -U %s -c 'DROP SCHEMA public CASCADE;' -c 'CREATE SCHEMA public;' -c '\i /ddl.sql'"
-    val cmdArr = Array(
-      "psql",
-      "-U",
-      "test",
-      "-c",
-      "DROP SCHEMA public CASCADE;",
-      "-c",
-      "CREATE SCHEMA public;",
-      "-c",
-      "\\i /ddl.sql"
-    )
+  private def insertIntoSeq[T : ClassTag](lst: Array[T], i: Int, el: T): Array[T] = {
+    val (front, back) = lst.splitAt(i)
+    front ++ Array(el) ++ back
+  }
+
+  def cleanSchema = {
+    val cmd =
+      Array("psql", "-U", "-c", "DROP SCHEMA public CASCADE;", "-c", "CREATE SCHEMA public;", "-c", raw"\i /ddl.sql")
+
     TestAspect.before(
-      ZIO
-        .service[PostgreSQLContainer]
-        .flatMap(pg =>
-          ZIO
-//            .attempt(pg.container.execInContainer(cmd.format(pg.container.getDatabaseName)))
-            .attempt(pg.container.execInContainer(cmdArr: _*))
-            .flatMap(res => ZIO.debug(res.toString))
-        )
-        .zipLeft(ZIO.debug("Clean schema"))
+      for {
+        pg <- ZIO.service[PostgreSQLContainer]
+        execRes <-
+          ZIO.attempt {
+            val usernamePosition = 2
+            val finalCmd =
+              insertIntoSeq(cmd, usernamePosition, pg.container.getUsername) // todo not very general, don't like it
+            pg.container.execInContainer(finalCmd: _*)
+          }
+        _ <- ZIO.logDebug(execRes.toString)
+      } yield ()
     )
   }
 }

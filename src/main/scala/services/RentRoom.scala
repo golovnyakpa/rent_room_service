@@ -46,7 +46,7 @@ object RentRoom {
                 _ => Right(makeSuccessfulRentNotification(rent))
               )
           } else {
-            ZIO.succeed(Right("Rent failed. This time was already booked."))
+            ZIO.succeed(Left("Rent failed. This time was already booked."))
           }
         )
 
