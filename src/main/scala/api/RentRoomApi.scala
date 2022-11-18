@@ -1,12 +1,14 @@
 package my.meetings_room_renter
 package api
 
+import my.meetings_room_renter.authentication.checkCredentials
 import my.meetings_room_renter.dao.entities.{Rent, Room, UpdatedRent}
 import my.meetings_room_renter.dao.repositories.RoomRepository
 import my.meetings_room_renter.serde._
 import my.meetings_room_renter.services.RentRoom.RentRoomService
 import my.meetings_room_renter.utils.RequestHandlers.parseRequest
 import my.meetings_room_renter.utils.ResponseMakers
+import zhttp.http.Middleware.basicAuth
 import zhttp.http._
 import zio._
 
@@ -42,6 +44,6 @@ object RentRoomApi {
       )
   }
 
-  def rentRoomApi(authedUsers: Ref[List[String]]) =
-    roomApi(authedUsers)
+  def rentRoomApi(authedUsers: Ref[List[String]]): Http[DataSource with RoomRepository.RentRepositoryService with RentRoomService, SQLException, Request, Response] =
+    roomApi(authedUsers) @@ basicAuth(checkCredentials)
 }

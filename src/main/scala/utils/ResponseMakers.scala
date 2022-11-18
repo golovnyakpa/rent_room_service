@@ -17,8 +17,8 @@ object ResponseMakers {
     RentRoomService
       .addNewRoom(newRoom)
       .map(isInserted =>
-        if (isInserted) Response.text(s"${newRoom.roomNumber} inserted") // todo refactor to correct code
-        else Response.text("Such room already exists").setStatus(Status.BadRequest)
+        if (isInserted) Response.text(s"${newRoom.roomNumber} inserted").setStatus(Status.Created)
+        else Response.text("Such room already exists").setStatus(Status.Conflict)
       )
 
   def addNewRentIfPossible(
@@ -27,7 +27,8 @@ object ResponseMakers {
     RentRoomService
       .rentRoom(newRent)
       .map {
-        case Left(value)  => Response.text(value).setStatus(Status.BadRequest)
+        case Left(value) =>
+          Response.text(value).setStatus(Status.Conflict) // todo add correct status code at the handler
         case Right(value) => Response.text(value)
       }
 
@@ -56,6 +57,6 @@ object ResponseMakers {
           .text("Such rent wasn't found. Check if you entered rent information correctly")
           .setStatus(Status.NotFound)
       case 1     => Response.text(s"Rent for room ${rent.room} was deleted")
-      case r @ _ => Response.text(s"$r rows were updated. That's wired").setStatus(Status.NotFound)
+      case r @ _ => Response.text(s"$r rows were updated. That's wired")
     }
 }
