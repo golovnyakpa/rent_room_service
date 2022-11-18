@@ -8,7 +8,7 @@ import my.meetings_room_renter.services.RentRoom.RentRoomService
 import zio._
 import zio.test._
 
-object UserServiceSpec extends ZIOSpecDefault {
+object RentRoomServiceSpec extends ZIOSpecDefault {
 
   val layer = dockerContainerLayer >+> testDataSourceLayer ++ RoomRepository.live ++ RentRoom.live
 

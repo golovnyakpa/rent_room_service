@@ -1,11 +1,12 @@
 package my.meetings_room_renter
 package utils
 
-import my.meetings_room_renter.dao.entities.{Rent, Room, UpdatedRent}
-import my.meetings_room_renter.dao.repositories.RoomRepository
+import my.meetings_room_renter.authentication.hashPassword
+import my.meetings_room_renter.dao.entities._
+import my.meetings_room_renter.dao.repositories.{RoomRepository, UserRepository}
 import my.meetings_room_renter.services.RentRoom.RentRoomService
 import zhttp.http.{Response, Status}
-import zio.ZIO
+import zio._
 
 import java.sql.SQLException
 import javax.sql.DataSource
@@ -51,7 +52,7 @@ object ResponseMakers {
   def deleteRent(
     rent: Rent
   ): ZIO[DataSource with RoomRepository.RentRepositoryService with RentRoomService, SQLException, Response] =
-    RentRoomService.deleteRent(rent).map {
+    RentRoomService.deleteRent(rent).map {  // todo handle sql exception required
       case 0 =>
         Response
           .text("Such rent wasn't found. Check if you entered rent information correctly")
@@ -59,4 +60,13 @@ object ResponseMakers {
       case 1     => Response.text(s"Rent for room ${rent.room} was deleted")
       case r @ _ => Response.text(s"$r rows were updated. That's wired")
     }
+
+  def registerNewUser(user: User): URIO[DataSource with UserRepository, Response] =
+    (for {
+      repo   <- ZIO.service[UserRepository]
+      userId <- repo.registerNewUser(UserDb(user.login, hashPassword(user.password)))
+    } yield userId).fold(err => Response.text(s"Error occurred $err"), id => Response.text(s"New user id: $id"))
+
+  def badRequestNotification(err: String): Task[Response] =
+    ZIO.succeed(Response.text(err).setStatus(Status.BadRequest))
 }

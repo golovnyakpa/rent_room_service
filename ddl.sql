@@ -27,3 +27,9 @@ create table users (
 	user_id serial PRIMARY KEY,
 	user_login VARCHAR(50) NOT NULL UNIQUE
 );
+
+create table users (
+	id serial PRIMARY KEY,
+	login VARCHAR(70) NOT NULL UNIQUE,
+	password VARCHAR(350) NOT NULL
+);

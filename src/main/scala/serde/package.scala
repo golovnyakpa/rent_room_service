@@ -1,6 +1,6 @@
 package my.meetings_room_renter
 
-import my.meetings_room_renter.dao.entities.{Rent, Room, UpdatedRent}
+import my.meetings_room_renter.dao.entities.{Rent, Room, UpdatedRent, User, UserDb}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 package object serde {
@@ -19,5 +19,10 @@ package object serde {
     DeriveJsonEncoder.gen[UpdatedRent]
   implicit val decoderUpdatedRent: JsonDecoder[UpdatedRent] =
     DeriveJsonDecoder.gen[UpdatedRent]
+
+  implicit val encoderUser: JsonEncoder[User] =
+    DeriveJsonEncoder.gen[User]
+  implicit val decoderUser: JsonDecoder[User] =
+    DeriveJsonDecoder.gen[User]
 
 }

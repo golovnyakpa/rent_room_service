@@ -17,4 +17,6 @@ package object entities {
     dttmEnd: LocalDateTime,
     renter: String
   )
+  case class UserDb(login: String, password: String, id: Long = 0L)
+  case class User(login: String, password: String)
 }
