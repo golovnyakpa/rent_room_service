@@ -1,14 +1,17 @@
 package my.meetings_room_renter
 package api
 
-import my.meetings_room_renter.authentication.checkCredentialsBasicAuth
+import my.meetings_room_renter.authentication.{checkCredentialsBasicAuth, checkJwt}
 import my.meetings_room_renter.dao.entities.{Rent, Room, UpdatedRent, User}
+import my.meetings_room_renter.dao.repositories.RoomRepository
 import my.meetings_room_renter.serde._
 import my.meetings_room_renter.services.RentRoom.RentRoomService
 import my.meetings_room_renter.utils.RequestHandlers.parseRequest
 import my.meetings_room_renter.utils.ResponseMakers
 import zhttp.http._
 import zio._
+
+import javax.sql.DataSource
 
 object RentRoomApi {
 
@@ -37,16 +40,11 @@ object RentRoomApi {
         err => ResponseMakers.badRequestNotification(err),
         rent => ResponseMakers.deleteRent(rent)
       )
-  } @@ Middleware.basicAuthZIO(checkCredentialsBasicAuth)
+  } @@ Middleware.bearerAuth(checkJwt)
 
-  def userApi = Http.collectZIO[Request] {
-    case req @ Method.POST -> Path.root / "users" / "register" =>
-      parseRequest[User](req).foldZIO(
-        err => ResponseMakers.badRequestNotification(err),
-        user => ResponseMakers.registerNewUser(user)
-      )
-  }
+  // app1
+  // app2 = app2 @ middleware2
+  // app3 = app3 @ middleware3
+  // app1 >>> app2
 
-  def rentRoomApi(authedUsers: Ref[List[String]]) =
-    roomApi(authedUsers) ++ userApi
 }

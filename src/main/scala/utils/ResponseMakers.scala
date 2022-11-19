@@ -68,5 +68,5 @@ object ResponseMakers {
     } yield userId).fold(err => Response.text(s"Error occurred $err"), id => Response.text(s"New user id: $id"))
 
   def badRequestNotification(err: String): Task[Response] =
-    ZIO.succeed(Response.text(err).setStatus(Status.BadRequest))
+    ZIO.succeed(Response.text(s"Ahhh shiit: $err").setStatus(Status.BadRequest))
 }

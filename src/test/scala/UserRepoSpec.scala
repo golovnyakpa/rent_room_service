@@ -30,7 +30,6 @@ object UserRepoSpec extends ZIOSpecDefault {
           } yield res).fold(_ => assertTrue(true), _ => assertTrue(false))
         } @@ cleanSchema
       )
-
     ).provideShared(layer) @@ TestAspect.sequential
 
 }
