@@ -13,8 +13,6 @@ object App {
 
   lazy val server = (for {
     authedUsers <- Ref.make(List.empty[String])
-    _           <- Server.start(configuration.configuration.port, registerEndpoint).fork
-    _           <- Server.start(configuration.configuration.port, loginEndpoint).fork
     _           <- Console.printLine(s"Server starting at http://localhost:${configuration.configuration.port}")
     _           <- Server.start(configuration.configuration.port, roomApi(authedUsers))
   } yield ExitCode.success).provide(RoomRepository.live, db.zioDS, RentRoom.live, UserRepositoryLive.layer)

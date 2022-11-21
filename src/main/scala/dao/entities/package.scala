@@ -23,16 +23,16 @@ package object entities {
   case class RoomJwt(roomNumber: String)
 
   case class RentJwt(
-                   room: String,
-                   dttmStart: LocalDateTime,
-                   dttmEnd: LocalDateTime,
-                   renter: String
-                 )
+    room: String,
+    dttmStart: LocalDateTime,
+    dttmEnd: LocalDateTime,
+    renter: String
+  )
 
   case class UpdatedRentJwt(
-                          oldRent: Rent,
-                          dttmStart: LocalDateTime,
-                          dttmEnd: LocalDateTime,
-                          renter: String
-                        )
+    oldRent: Rent,
+    dttmStart: LocalDateTime,
+    dttmEnd: LocalDateTime,
+    renter: String
+  )
 }
