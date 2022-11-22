@@ -29,7 +29,7 @@ object ResponseMakers {
       .rentRoom(newRent)
       .map {
         case Left(value) =>
-          Response.text(value).setStatus(Status.Conflict) // todo add correct status code at the handler
+          Response.text(value).setStatus(Status.Conflict)
         case Right(value) => Response.text(value)
       }
 

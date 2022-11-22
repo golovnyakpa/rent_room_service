@@ -40,7 +40,7 @@ object RentRoomApi {
         err => ResponseMakers.badRequestNotification(err),
         rent => ResponseMakers.deleteRent(rent)
       )
-  } @@ Middleware.bearerAuth(checkJwt)
+  }.middleware(Middleware.bearerAuth(checkJwt)) // @@ Middleware.bearerAuth(checkJwt)
 
   // app1
   // app2 = app2 @ middleware2

@@ -26,6 +26,6 @@ object AuthenticationApi {
    def loginEndpoint: Http[DataSource with UserRepository, SQLException, Request, Response] = Http.collect[Request] {
     case Method.POST -> Path.root / "user" / "login" =>
       Response.text(giveJwt)
-  } @@ Middleware.basicAuthZIO(checkCredentialsBasicAuth)
+  }.middleware(Middleware.basicAuthZIO(checkCredentialsBasicAuth)) // @@ Middleware.basicAuthZIO(checkCredentialsBasicAuth))
 
 }
