@@ -8,7 +8,6 @@ import zio.Ref
 
 object AppApi {
 
-  val authorizationApi = registerEndpoint ++ loginEndpoint
   def appApi(authedUsers: Ref[List[String]]) =
     roomApi(authedUsers) // interesting bug here: middleware translates to
   // other  Http's, i.e. middleware of login endpoint also translates to roomApi.

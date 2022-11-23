@@ -30,7 +30,7 @@ package object authentication {
 
   def checkJwt(token: String): Boolean = {
     JwtZIOJson.decodeJson(token, jwtSecretKey, Seq(JwtAlgorithm.HS256)) match {
-      case Failure(exception) => false
+      case Failure(_) => false
       case Success(value) => true
     }
   }

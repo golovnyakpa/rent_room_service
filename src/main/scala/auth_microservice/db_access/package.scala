@@ -15,9 +15,6 @@ package object db_access {
     pass = "test"
   ) // todo load it from parsed config
 
-  val roomsQuery: IO[List[String]] =
-    sql"select dttm_start from future_rents;".query[String].to[List].transact(xa)
-
   def registerUser(user: User): IO[Either[String, Int]] = {
     val passwordHash = hashPassword(user.password)
 

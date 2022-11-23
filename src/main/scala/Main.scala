@@ -1,6 +1,6 @@
 package my.meetings_room_renter
 
-import my.meetings_room_renter.App.server
+import my.meetings_room_renter.RoomRentApp.server
 import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
 
 object Main extends ZIOAppDefault{

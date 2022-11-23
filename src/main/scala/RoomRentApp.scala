@@ -8,7 +8,7 @@ import my.meetings_room_renter.services.RentRoom
 import zhttp.service.Server
 import zio._
 
-object App {
+object RoomRentApp extends ZIOAppDefault {
 
 //  val appEnvironment = RoomRepository.live ++ db.zioDS ++ RentRoom.live
 
@@ -17,5 +17,8 @@ object App {
     _           <- Console.printLine(s"Server starting at http://localhost:${configuration.configuration.port}")
     _           <- Server.start(configuration.configuration.port, appApi(authedUsers))
   } yield ExitCode.success).provide(RoomRepository.live, db.zioDS, RentRoom.live, UserRepositoryLive.layer)
+
+  override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] =
+    server
 
 }
