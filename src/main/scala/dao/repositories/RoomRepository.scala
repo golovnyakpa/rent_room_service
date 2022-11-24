@@ -23,6 +23,7 @@ object RoomRepository {
     def getRent(rent: Rent): QIO[Option[Rent]]
     def updateRent(oldRent: Rent, newRent: Rent): ZIO[DataSource, SQLException, Long]
     def deleteRent(rent: Rent): ZIO[DataSource, SQLException, Long]
+    def listFutureRentsForUser(user: String): QIO[List[Rent]]
   }
 
   class DBServiceImpl() extends RentRepositoryService {
@@ -66,6 +67,10 @@ object RoomRepository {
     override def insertRent(rent: Rent): QIO[Unit] = run(futureRentsSchema.insertValue(lift(rent))).unit
 
     override def listFutureRents: QIO[List[Rent]] = run(futureRentsSchema)
+
+    override def listFutureRentsForUser(user: String): QIO[List[Rent]] = run(
+      futureRentsSchema.filter(_.renter == lift(user))
+    )
 
     override def getRent(rent: Rent): QIO[Option[Rent]] = run(
       futureRentsSchema
@@ -120,6 +125,9 @@ object RoomRepository {
 
     def listFutureRents(): ZIO[DataSource with RentRepositoryService, SQLException, List[Rent]] =
       ZIO.serviceWithZIO[RentRepositoryService](_.listFutureRents)
+
+    def listFutureRentsForUser(user: String) =
+      ZIO.serviceWithZIO[RentRepositoryService](_.listFutureRentsForUser(user))
 
     def getRent(rent: Rent): ZIO[DataSource with RentRepositoryService, SQLException, Option[Rent]] =
       ZIO.serviceWithZIO[RentRepositoryService](_.getRent(rent))

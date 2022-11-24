@@ -1,11 +1,11 @@
 package my.meetings_room_renter
 package utils
 
-import my.meetings_room_renter.authentication.hashPassword
+import my.meetings_room_renter.authentication.{extractLoginFromJwt, hashPassword}
 import my.meetings_room_renter.dao.entities._
 import my.meetings_room_renter.dao.repositories.{RoomRepository, UserRepository}
 import my.meetings_room_renter.services.RentRoom.RentRoomService
-import zhttp.http.{Response, Status}
+import zhttp.http.{Request, Response, Status}
 import zio._
 
 import java.sql.SQLException
@@ -68,5 +68,6 @@ object ResponseMakers {
     } yield userId).fold(err => Response.text(s"Error occurred $err"), id => Response.text(s"New user id: $id"))
 
   def badRequestNotification(err: String): Task[Response] =
-    ZIO.succeed(Response.text(s"Ahhh shiit: $err").setStatus(Status.BadRequest))
+    ZIO.succeed(Response.text(s"Something wrong. Details: $err").setStatus(Status.BadRequest))
+
 }
