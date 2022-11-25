@@ -2,15 +2,14 @@ package my.meetings_room_renter
 
 import my.meetings_room_renter.TestContainer.{cleanSchema, dockerContainerLayer, testDataSourceLayer}
 import my.meetings_room_renter.dao.entities.{Rent, Room}
-import my.meetings_room_renter.dao.repositories.RoomRepository
-import my.meetings_room_renter.services.RentRoom
-import my.meetings_room_renter.services.RentRoom.RentRoomService
+import my.meetings_room_renter.dao.repositories.DBServiceImpl
+import my.meetings_room_renter.services.{RentRoomService, RentRoomServiceImpl}
 import zio._
 import zio.test._
 
 object RentRoomServiceSpec extends ZIOSpecDefault {
 
-  val layer = dockerContainerLayer >+> testDataSourceLayer ++ RoomRepository.live ++ RentRoom.live
+  val layer = dockerContainerLayer >+> testDataSourceLayer ++ DBServiceImpl.live ++ RentRoomServiceImpl.live
 
   private def testRentInsertion(testRents: Seq[Rent]) =
     for {

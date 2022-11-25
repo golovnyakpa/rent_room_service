@@ -1,8 +1,6 @@
 package my.meetings_room_renter
 package api
 
-
-import my.meetings_room_renter.api.AuthenticationApi.{loginEndpoint, registerEndpoint}
 import my.meetings_room_renter.api.RentRoomApi.roomApi
 import zio.Ref
 
