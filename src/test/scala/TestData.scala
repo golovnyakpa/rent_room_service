@@ -18,18 +18,18 @@ object TestData {
   )
 
   lazy val nonoverlappingRents: List[Rent] = List(
-    Rent(rooms.head.roomNumber, dates.head._1, dates.head._2, "user"),
-    Rent(rooms.head.roomNumber, dates(1)._1, dates(1)._2, "user"),
-    Rent(rooms.head.roomNumber, dates(2)._1, dates(2)._2, "user")
+    Rent(rooms.head.roomNumber, dates.head._1, dates.head._2, Option("user")),
+    Rent(rooms.head.roomNumber, dates(1)._1, dates(1)._2, Option("user")),
+    Rent(rooms.head.roomNumber, dates(2)._1, dates(2)._2, Option("user"))
   )
 
   lazy val overlappingRents: List[Rent] = List(
-    Rent(rooms.head.roomNumber, dates.head._1, dates.head._2, "user"),
-    Rent(rooms.head.roomNumber, dates(3)._1, dates(3)._2, "user"),
-    Rent(rooms.head.roomNumber, dates(4)._1, dates(4)._2, "user"),
-    Rent(rooms.head.roomNumber, dates(2)._1, dates(2)._2, "user")
+    Rent(rooms.head.roomNumber, dates.head._1, dates.head._2, Option("user")),
+    Rent(rooms.head.roomNumber, dates(3)._1, dates(3)._2, Option("user")),
+    Rent(rooms.head.roomNumber, dates(4)._1, dates(4)._2, Option("user")),
+    Rent(rooms.head.roomNumber, dates(2)._1, dates(2)._2, Option("user"))
   )
 
-  lazy val updatedRent = UpdatedRent(nonoverlappingRents.head, dates(2)._1, dates(2)._2, "user")
+  lazy val updatedRent = UpdatedRent(nonoverlappingRents.head, dates(2)._1, dates(2)._2, Option("user"))
 
 }

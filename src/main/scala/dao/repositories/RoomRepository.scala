@@ -85,6 +85,11 @@ class DBServiceImpl() extends RentRepositoryService {
     def >(b: LocalDateTime)  = quote(sql"""$a > $b""".as[Boolean])
   }
 
+  /**
+   * @param rent new rent
+   * @return Some(room_number) in case, if new rent intersects with already existing rent for room from @param rent
+   *         None otherwise
+   */
   override def getRoomFromFutureRentsInInterval(rent: Rent): ZIO[DataSource, SQLException, Option[String]] =
     run(
       futureRentsSchema
@@ -101,7 +106,7 @@ class DBServiceImpl() extends RentRepositoryService {
   override def listFutureRents: QIO[List[Rent]] = run(futureRentsSchema)
 
   override def listFutureRentsForUser(user: String): QIO[List[Rent]] = run(
-    futureRentsSchema.filter(_.renter == lift(user))
+    futureRentsSchema.filter(_.renter == lift(Option(user))) // sorry for get but we can come here only if user provided
   )
 
   override def getRent(rent: Rent): QIO[Option[Rent]] = run(

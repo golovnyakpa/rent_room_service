@@ -39,6 +39,7 @@ lazy val root = (project in file("."))
       "dev.zio"              %% "zio-test-magnolia"               % "2.0.3"   % Test,
       "io.github.kitlangton" %% "zio-magic"                       % "0.3.12",
       "dev.zio"              %% "zio-json"                        % "0.3.0",
+      "dev.zio"              %% "zio-macros"                      % "2.0.4",
       "org.postgresql"        % "postgresql"                      % "42.3.1",
       "org.liquibase"         % "liquibase-core"                  % "4.17.1",
       "com.dimafeng"         %% "testcontainers-scala-mysql"      % "0.36.0"  % Test,

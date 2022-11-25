@@ -9,6 +9,7 @@ import zio._
 
 import java.sql.SQLException
 import javax.sql.DataSource
+import zio.macros.accessible
 
 trait RentRoomService {
   def addNewRoom(room: Room): ZIO[DataSource with RentRepositoryService, SQLException, Boolean]
@@ -89,20 +90,24 @@ class RentRoomServiceImpl extends RentRoomService {
   def updateRent(
     updatedRent: UpdatedRent
   ): ZIO[DataSource with RentRepositoryService, SQLException, Either[String, Long]] = {
-    val newRent =
-      Rent(updatedRent.oldRent.room, updatedRent.dttmStart, updatedRent.dttmEnd, updatedRent.oldRent.renter)
 
-    // todo transactional here
-    RentRepositoryService.getRoomFromFutureRentsInInterval(newRent).flatMap { opt =>
-      if (opt.isEmpty) {
-        RentRepositoryService
-          .updateRent(updatedRent.oldRent, newRent)
-          .fold(
-            e => Left(s"${sqlStateToTextMapping.getOrElse(e.getSQLState, e.getMessage)}"),
-            res => Right(res)
-          )
-      } else {
-        ZIO.succeed(Left("This time is not available for this room")) // todo think about this (HTTP codes spec)
+    if (updatedRent.oldRent.renter != updatedRent.renter) ZIO.succeed(Left("Users can change only theirs rents"))
+    else {
+      val newRent =
+        Rent(updatedRent.oldRent.room, updatedRent.dttmStart, updatedRent.dttmEnd, updatedRent.renter)
+
+      // todo transactional here
+      RentRepositoryService.getRoomFromFutureRentsInInterval(newRent).flatMap { opt =>
+        if (opt.isEmpty) {
+          RentRepositoryService
+            .updateRent(updatedRent.oldRent, newRent)
+            .fold(
+              e => Left(s"${sqlStateToTextMapping.getOrElse(e.getSQLState, e.getMessage)}"),
+              res => Right(res)
+            )
+        } else {
+          ZIO.succeed(Left("Rent failed. This time was already booked.")) // todo think about this (HTTP codes spec)
+        }
       }
     }
   }

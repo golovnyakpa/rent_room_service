@@ -12,7 +12,7 @@ import zio._
 
 object RentRoomApi {
 
-  def roomApi(authed: Ref[List[String]]) = Http.collectZIO[Request] {
+  val roomApi = Http.collectZIO[Request] {
     case req @ Method.POST -> Path.root / "rooms" =>
       parseRequest[Room](req).foldZIO(
         err => ResponseMakers.badRequestNotification(err),
@@ -23,7 +23,7 @@ object RentRoomApi {
     case req @ Method.POST -> Path.root / "rents" =>
       parseRequest[Rent](req).foldZIO(
         err => ResponseMakers.badRequestNotification(err),
-        newRent => ResponseMakers.addNewRentIfPossible(newRent)
+        newRent => ResponseMakers.addNewRentIfPossible(newRent.copy(renter = Some(extractLoginFromJwt(req.headers.bearerToken))))
       )
     case req @ Method.GET -> Path.root / "rents" =>
 //      RentRoomService.listFutureRents.flatMap(lst => ZIO.succeed(Response.text(lst.mkString(", "))))
@@ -33,18 +33,13 @@ object RentRoomApi {
     case req @ Method.PUT -> Path.root / "rents" =>
       parseRequest[UpdatedRent](req).foldZIO(
         err => ResponseMakers.badRequestNotification(err),
-        updatedRent => ResponseMakers.updateRentIfPossible(updatedRent)
+        updatedRent => ResponseMakers.updateRentIfPossible(updatedRent, req)
       )
     case req @ Method.DELETE -> Path.root / "rents" =>
       parseRequest[Rent](req).foldZIO(
         err => ResponseMakers.badRequestNotification(err),
-        rent => ResponseMakers.deleteRent(rent)
+        rent => ResponseMakers.deleteRent(rent.copy(renter = Some(extractLoginFromJwt(req.headers.bearerToken))))
       )
-  } @@ Middleware.bearerAuth(checkJwt) @@ addLoginHeader
-
-  // app1
-  // app2 = app2 @ middleware2
-  // app3 = app3 @ middleware3
-  // app1 >>> app2
+  } @@ Middleware.bearerAuth(checkJwt) // @@ addLoginHeader
 
 }

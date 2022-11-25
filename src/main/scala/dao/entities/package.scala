@@ -9,13 +9,13 @@ package object entities {
     room: String,
     dttmStart: LocalDateTime,
     dttmEnd: LocalDateTime,
-    renter: String
+    renter: Option[String]
   )
   case class UpdatedRent(
     oldRent: Rent,
     dttmStart: LocalDateTime,
     dttmEnd: LocalDateTime,
-    renter: String
+    renter: Option[String] = None
   )
   case class UserDb(login: String, password: String, id: Long = 0L)
   case class User(login: String, password: String)

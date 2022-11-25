@@ -12,9 +12,8 @@ object RoomRentApp extends ZIOAppDefault {
 //  val appEnvironment = RoomRepository.live ++ db.zioDS ++ RentRoom.live
 
   lazy val server = (for {
-    authedUsers <- Ref.make(List.empty[String])
     _           <- Console.printLine(s"Server starting at http://localhost:${configuration.configuration.port}")
-    _           <- Server.start(configuration.configuration.port, appApi(authedUsers))
+    _           <- Server.start(configuration.configuration.port, appApi)
   } yield ExitCode.success).provide(DBServiceImpl.live, db.zioDS, RentRoomServiceImpl.live, UserRepositoryLive.layer)
 
   override def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] =

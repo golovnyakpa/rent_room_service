@@ -1,15 +1,15 @@
 package my.meetings_room_renter
 
 import my.meetings_room_renter.TestContainer.{cleanSchema, dockerContainerLayer, testDataSourceLayer}
-import my.meetings_room_renter.dao.entities.{Rent, Room}
-import my.meetings_room_renter.dao.repositories.DBServiceImpl
+import my.meetings_room_renter.dao.entities.{Rent, Room, UpdatedRent, UserDb}
+import my.meetings_room_renter.dao.repositories.{DBServiceImpl, UserRepository, UserRepositoryLive}
 import my.meetings_room_renter.services.{RentRoomService, RentRoomServiceImpl}
 import zio._
 import zio.test._
 
 object RentRoomServiceSpec extends ZIOSpecDefault {
 
-  val layer = dockerContainerLayer >+> testDataSourceLayer ++ DBServiceImpl.live ++ RentRoomServiceImpl.live
+  val layer = dockerContainerLayer >+> testDataSourceLayer ++ DBServiceImpl.live ++ RentRoomServiceImpl.live ++ UserRepositoryLive.layer
 
   private def testRentInsertion(testRents: Seq[Rent]) =
     for {
@@ -96,7 +96,7 @@ object RentRoomServiceSpec extends ZIOSpecDefault {
             res             <- rentRoomService.updateRent(TestData.updatedRent)
             data            <- rentRoomService.listFutureRents()
           } yield assertTrue(
-            res == Left("This time is not available for this room") &&
+            res == Left("Rent failed. This time was already booked.") &&
               data.contains(TestData.nonoverlappingRents(2)) &&
               data.contains(TestData.updatedRent.oldRent)
           )
@@ -115,12 +115,58 @@ object RentRoomServiceSpec extends ZIOSpecDefault {
         test("Don't delete invalid rent") {
           for {
             rentRoomService <- ZIO.service[RentRoomService]
-            _ <- rentRoomService.addNewRoom(TestData.rooms.head)
-            _ <- rentRoomService.rentRoom(TestData.nonoverlappingRents(1))
+            _               <- rentRoomService.addNewRoom(TestData.rooms.head)
+            _               <- rentRoomService.rentRoom(TestData.nonoverlappingRents(1))
             deletedLinesNum <- rentRoomService.deleteRent(TestData.nonoverlappingRents.head)
-            res <- rentRoomService.listFutureRents()
+            res             <- rentRoomService.listFutureRents()
           } yield assertTrue(res.nonEmpty && deletedLinesNum == 0L)
         } @@ cleanSchema
+      ),
+      suite("Access separation for different users")(
+        test("User can see only his rents") {
+          for {
+            rentRoomService <- ZIO.service[RentRoomService]
+            _               <- rentRoomService.addNewRoom(TestData.rooms.head)
+            _               <- rentRoomService.rentRoom(TestData.nonoverlappingRents.head.copy(renter = Option("Vasya")))
+            _               <- rentRoomService.rentRoom(TestData.nonoverlappingRents.tail.head.copy(renter = Option("Petya")))
+            _               <- rentRoomService.rentRoom(TestData.nonoverlappingRents(2).copy(renter = Option("Vasya")))
+            res1            <- rentRoomService.listFutureRentsForUser("Vasya")
+            res2            <- rentRoomService.listFutureRentsForUser("Petya")
+            res3            <- rentRoomService.listFutureRentsForUser("unknown")
+          } yield assertTrue(res1.size == 2 &&  res2.size == 1 && res3.isEmpty)
+        } @@ cleanSchema,
+        test("User can delete only his rents") {
+          for {
+            rentRoomService <- ZIO.service[RentRoomService]
+            _ <- rentRoomService.addNewRoom(TestData.rooms.head)
+            rent1 = TestData.nonoverlappingRents.head.copy(renter = Option("Vasya"))
+            rent2 = TestData.nonoverlappingRents.tail.head.copy(renter = Option("Petya"))
+            _ <- rentRoomService.rentRoom(rent1)
+            _ <- rentRoomService.rentRoom(rent2)
+            res <- rentRoomService.deleteRent(rent1.copy(renter = Option("Petya")))
+          } yield assertTrue(res == 0L)
+        } @@ cleanSchema,
+        test("User can update only his rents") {
+          for {
+            rentRoomService <- ZIO.service[RentRoomService]
+            _ <- rentRoomService.addNewRoom(TestData.rooms.head)
+            rent1 = TestData.nonoverlappingRents.head.copy(renter = Option("Vasya"))
+            rent2 = TestData.nonoverlappingRents.tail.head.copy(renter = Option("Petya"))
+            _ <- rentRoomService.rentRoom(rent1)
+            _ <- rentRoomService.rentRoom(rent2)
+            res <- rentRoomService.updateRent(UpdatedRent(rent1, rent1.dttmStart.plusHours(3L), rent1.dttmEnd.plusHours(3L), rent2.renter))
+          } yield assertTrue(res.isLeft && res.left.map(_ == "Users can change only theirs rents").left.getOrElse(false))
+        } @@ cleanSchema,
+        test("User can't rent room for overlapping time with another renter") {
+          for {
+            rentRoomService <- ZIO.service[RentRoomService]
+            _ <- rentRoomService.addNewRoom(TestData.rooms.head)
+            rent1 = TestData.overlappingRents.head.copy(renter = Option("Vasya"))
+            rent2 = TestData.overlappingRents.tail.head.copy(renter = Option("Petya"))
+            _ <- rentRoomService.rentRoom(rent1)
+            res <- rentRoomService.rentRoom(rent2)
+          } yield assertTrue(res.isLeft && res.left.map(_ == "Rent failed. This time was already booked.").left.getOrElse(false))
+        }
       )
     ).provideShared(layer) @@ TestAspect.sequential
 

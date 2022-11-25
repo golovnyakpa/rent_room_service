@@ -2,12 +2,12 @@ package my.meetings_room_renter
 package utils
 
 import zhttp.http.Request
-import zio.ZIO
+import zio.{IO, ZIO}
 import zio.json.{DecoderOps, JsonDecoder}
 
 object RequestHandlers {
 
-  def parseRequest[T: JsonDecoder](req: Request): ZIO[Any, String, T] =
+  def parseRequest[T: JsonDecoder](req: Request): IO[String, T] =
     (for {
       body <- req.body.asString
       res  <- ZIO.fromEither(body.fromJson[T])
