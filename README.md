@@ -7,3 +7,5 @@ Tech stack:
 * ZIO HTTP
 * Quill
 * PostgreSQL
+* http4s
+* Doobie
