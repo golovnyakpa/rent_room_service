@@ -2,8 +2,8 @@ package my.meetings_room_renter
 package utils
 
 import zhttp.http.Request
-import zio.{IO, ZIO}
 import zio.json.{DecoderOps, JsonDecoder}
+import zio.{IO, ZIO}
 
 object RequestHandlers {
 

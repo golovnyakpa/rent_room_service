@@ -9,7 +9,7 @@ package object entities {
     room: String,
     dttmStart: LocalDateTime,
     dttmEnd: LocalDateTime,
-    renter: Option[String]
+    renter: Option[String] = None
   )
   case class UpdatedRent(
     oldRent: Rent,

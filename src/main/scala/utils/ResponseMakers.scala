@@ -31,7 +31,7 @@ object ResponseMakers {
       .map {
         case Left(value) =>
           Response.text(value).setStatus(Status.Conflict)
-        case Right(value) => Response.text(value)
+        case Right(value) => Response.text(value).setStatus(Status.Created)
       }
 
   def updateRentIfPossible(
@@ -46,7 +46,7 @@ object ResponseMakers {
           case 1 => Response.text("Successfully updated")
           case 0 =>
             Response
-              .text("Your rent is not found. Such room doesn't exists or wasn't rent for this tome")
+              .text("Your rent is not found. Such room doesn't exists or wasn't rent for this time")
               .setStatus(Status.NotFound)
           case r @ _ => Response.text(s"$r rows were updated. That's wired")
         }
@@ -56,7 +56,7 @@ object ResponseMakers {
   def deleteRent(
     rent: Rent
   ): ZIO[DataSource with RentRepositoryService with RentRoomService, SQLException, Response] =
-    RentRoomService.deleteRent(rent).map {  // todo handle sql exception required
+    RentRoomService.deleteRent(rent).map { // todo handle sql exception required
       case 0 =>
         Response
           .text("Such rent wasn't found. Check if you entered rent information correctly")

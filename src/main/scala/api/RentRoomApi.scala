@@ -23,7 +23,8 @@ object RentRoomApi {
     case req @ Method.POST -> Path.root / "rents" =>
       parseRequest[Rent](req).foldZIO(
         err => ResponseMakers.badRequestNotification(err),
-        newRent => ResponseMakers.addNewRentIfPossible(newRent.copy(renter = Some(extractLoginFromJwt(req.headers.bearerToken))))
+        newRent =>
+          ResponseMakers.addNewRentIfPossible(newRent.copy(renter = Some(extractLoginFromJwt(req.headers.bearerToken))))
       )
     case req @ Method.GET -> Path.root / "rents" =>
 //      RentRoomService.listFutureRents.flatMap(lst => ZIO.succeed(Response.text(lst.mkString(", "))))
@@ -40,6 +41,6 @@ object RentRoomApi {
         err => ResponseMakers.badRequestNotification(err),
         rent => ResponseMakers.deleteRent(rent.copy(renter = Some(extractLoginFromJwt(req.headers.bearerToken))))
       )
-  } @@ Middleware.bearerAuth(checkJwt) // @@ addLoginHeader
+  } @@ Middleware.bearerAuth(checkJwt)
 
 }

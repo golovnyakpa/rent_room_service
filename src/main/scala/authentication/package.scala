@@ -53,7 +53,7 @@ package object authentication {
     (for {
       t           <- token
       parsedToken <- parseJwt(t).toOption
-      user <- parsedToken.as[User].toOption
+      user        <- parsedToken.as[User].toOption
     } yield user.sub).getOrElse(throw new RuntimeException("Critical defect"))
   }
 

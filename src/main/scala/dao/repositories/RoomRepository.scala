@@ -38,8 +38,8 @@ object RentRepositoryService {
     ZIO.serviceWithZIO[RentRepositoryService](_.insertRent(rent))
 
   def getRoomFromFutureRentsInInterval(
-                                        rent: Rent
-                                      ): ZIO[DataSource with RentRepositoryService, SQLException, Option[String]] =
+    rent: Rent
+  ): ZIO[DataSource with RentRepositoryService, SQLException, Option[String]] =
     ZIO.serviceWithZIO[RentRepositoryService](_.getRoomFromFutureRentsInInterval(rent))
 
   def listFutureRents(): ZIO[DataSource with RentRepositoryService, SQLException, List[Rent]] =
@@ -86,9 +86,11 @@ class DBServiceImpl() extends RentRepositoryService {
   }
 
   /**
-   * @param rent new rent
-   * @return Some(room_number) in case, if new rent intersects with already existing rent for room from @param rent
-   *         None otherwise
+   * @param rent
+   *   new rent
+   * @return
+   *   Some(room_number) in case, if new rent intersects with already existing
+   *   rent for room from @param rent None otherwise
    */
   override def getRoomFromFutureRentsInInterval(rent: Rent): ZIO[DataSource, SQLException, Option[String]] =
     run(

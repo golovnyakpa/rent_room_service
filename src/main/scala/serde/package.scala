@@ -1,6 +1,6 @@
 package my.meetings_room_renter
 
-import my.meetings_room_renter.dao.entities.{Rent, Room, UpdatedRent, User, UserDb}
+import my.meetings_room_renter.dao.entities.{Rent, Room, UpdatedRent, User}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 package object serde {

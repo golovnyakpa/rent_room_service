@@ -1,7 +1,6 @@
 package my.meetings_room_renter
 
 import pdi.jwt.JwtAlgorithm
-import zio.Layer
 
 package object configuration {
   case class Configuration(host: String, port: Int)
@@ -23,6 +22,6 @@ package object configuration {
   )
 
   val jwtSecretKey: String = "secretKey"
-  val jwtSignatureAlgo = JwtAlgorithm.HS256
+  val jwtSignatureAlgo     = JwtAlgorithm.HS256
 
 }
