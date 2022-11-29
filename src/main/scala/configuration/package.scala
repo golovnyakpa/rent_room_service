@@ -1,6 +1,6 @@
 package my.meetings_room_renter
 
-import zio.Layer
+import pdi.jwt.JwtAlgorithm
 
 package object configuration {
   case class Configuration(host: String, port: Int)
@@ -18,7 +18,10 @@ package object configuration {
   case class DbConfig(driver: String, url: String, user: String, password: String)
 
   val sqlStateToTextMapping: Map[String, String] = Map(
-    "23503" -> "Rent failed. Such room doesn't exists"
+    "23503" -> "Rent update failed. Such room or rent doesn't exists"
   )
+
+  val jwtSecretKey: String = "secretKey"
+  val jwtSignatureAlgo     = JwtAlgorithm.HS256
 
 }

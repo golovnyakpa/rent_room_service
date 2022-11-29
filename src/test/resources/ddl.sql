@@ -24,6 +24,7 @@ create table past_rents (
 );
 
 create table users (
-	user_id serial PRIMARY KEY,
-	user_login VARCHAR(50) NOT NULL UNIQUE
+	id serial PRIMARY KEY,
+	login VARCHAR(70) NOT NULL UNIQUE,
+	password VARCHAR(350) NOT NULL
 );
