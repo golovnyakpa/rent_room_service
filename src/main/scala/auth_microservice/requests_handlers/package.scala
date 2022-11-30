@@ -4,7 +4,7 @@ package auth_microservice
 import cats.data.EitherT
 import cats.effect._
 import my.meetings_room_renter.auth_microservice.Models._
-import my.meetings_room_renter.auth_microservice.db_access.{getUserByLogin, registerUser}
+import my.meetings_room_renter.auth_microservice.db_access.DbAccess
 import org.http4s.{EntityDecoder, Request}
 
 package object requests_handlers {
@@ -18,18 +18,18 @@ package object requests_handlers {
   private def parseRequest[T](req: Request[IO])(implicit d: EntityDecoder[IO, T]): IO[Either[String, T]] =
     req.as[T].redeem(e => Left(e.getMessage), u => Right(u))
 
-  def handleRegisterRequest(req: Request[IO]): EitherT[IO, String, String] =
+  def handleRegisterRequest(req: Request[IO], dbAccess: DbAccess): EitherT[IO, String, String] =
     for {
       user <- EitherT(parseRequest[User](req))
-      _    <- EitherT(registerUser(user))
+      _    <- EitherT(dbAccess.registerUser(user))
       resp <- EitherT.liftF[IO, String, String](IO.pure(s"User ${user.login} successfully registered"))
     } yield resp
 
-  def handleLoginRequest(req: Request[IO]): EitherT[IO, String, User] =
+  def handleLoginRequest(req: Request[IO], dbAccess: DbAccess): EitherT[IO, String, User] =
     for {
       encodedCreds <- EitherT(IO.pure(getAuthorizationHeader(req)))
       user         <- EitherT(IO.pure(parseBasicAuthCredentials(encodedCreds)))
-      usersFromDb  <- EitherT(getUserByLogin(user.login))
+      usersFromDb  <- EitherT(dbAccess.getUserByLogin(user.login))
       res <- usersFromDb match {
                case userFromDb :: Nil =>
                  EitherT(

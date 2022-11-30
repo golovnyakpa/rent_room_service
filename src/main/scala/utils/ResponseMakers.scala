@@ -61,7 +61,7 @@ object ResponseMakers {
         Response
           .text("Such rent wasn't found. Check if you entered rent information correctly")
           .setStatus(Status.NotFound)
-      case 1     => Response.text(s"Rent for room ${rent.room} was deleted")
+      case 1     => Response.text(s"Rent ${rent.dttmStart} - ${rent.dttmEnd} for room ${rent.room} was deleted")
       case r @ _ => Response.text(s"$r rows were updated. That's wired")
     }
 

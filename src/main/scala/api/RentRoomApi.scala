@@ -3,6 +3,7 @@ package api
 
 import my.meetings_room_renter.authentication.{checkJwt, extractLoginFromJwt}
 import my.meetings_room_renter.dao.entities.{Rent, Room, UpdatedRent}
+import my.meetings_room_renter.logging.VerboseLogging
 import my.meetings_room_renter.serde._
 import my.meetings_room_renter.services.RentRoomService
 import my.meetings_room_renter.utils.RequestHandlers.parseRequest
@@ -41,6 +42,6 @@ object RentRoomApi {
         err => ResponseMakers.badRequestNotification(err),
         rent => ResponseMakers.deleteRent(rent.copy(renter = Some(extractLoginFromJwt(req.headers.bearerToken))))
       )
-  } @@ Middleware.bearerAuth(checkJwt)
+  } @@ VerboseLogging.log @@ Middleware.bearerAuth(checkJwt)
 
 }

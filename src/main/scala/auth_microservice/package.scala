@@ -1,15 +1,24 @@
 package my.meetings_room_renter
 
+import cats.data.Kleisli
 import cats.effect.IO
-import my.meetings_room_renter.auth_microservice.Models.User
+import my.meetings_room_renter.auth_microservice.Models._
 import my.meetings_room_renter.configuration.{jwtSecretKey, jwtSignatureAlgo}
-import org.http4s.Request
 import org.http4s.headers.Authorization
+import org.http4s.{HttpRoutes, Request}
 import pdi.jwt.{JwtClaim, JwtZIOJson}
 
 import java.security.MessageDigest
 
 package object auth_microservice {
+
+  def logRequestMiddleware(route: HttpRoutes[IO]): HttpRoutes[IO] =
+    Kleisli { req =>
+      println(s"> ${req.uri}")
+      req.headers.foreach(h => println(s">>> ${h.name}: ${h.value}"))
+      println()
+      route(req)
+    }
 
   case class Credentials(login: String, password: String)
 

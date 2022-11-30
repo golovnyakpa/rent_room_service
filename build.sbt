@@ -17,11 +17,12 @@ lazy val CatsDependencies = Seq(
 )
 
 lazy val DoobieDependencies = Seq(
-  "org.tpolecat" %% "doobie-core"      % "1.0.0-RC1",
-  "org.tpolecat" %% "doobie-hikari"    % "1.0.0-RC1", // HikariCP transactor.
-  "org.tpolecat" %% "doobie-postgres"  % "1.0.0-RC1", // Postgres driver 42.3.1 + type mappings.
-  "org.tpolecat" %% "doobie-specs2"    % "1.0.0-RC1" % "test", // Specs2 support for typechecking statements.
-  "org.tpolecat" %% "doobie-scalatest" % "1.0.0-RC1" % "test"  // ScalaTest support for typechecking statements.
+  "org.tpolecat"          %% "doobie-core"      % "1.0.0-RC1",
+  "org.tpolecat"          %% "doobie-hikari"    % "1.0.0-RC1", // HikariCP transactor.
+  "org.tpolecat"          %% "doobie-postgres"  % "1.0.0-RC1", // Postgres driver 42.3.1 + type mappings.
+  "org.tpolecat"          %% "doobie-specs2"    % "1.0.0-RC1" % "test", // Specs2 support for typechecking statements.
+  "org.tpolecat"          %% "doobie-scalatest" % "1.0.0-RC1" % "test", // ScalaTest support for typechecking statements.
+  "com.github.pureconfig" %% "pureconfig"       % "0.17.2"
 )
 
 lazy val root = (project in file("."))
@@ -40,6 +41,9 @@ lazy val root = (project in file("."))
       "io.github.kitlangton" %% "zio-magic"                       % "0.3.12",
       "dev.zio"              %% "zio-json"                        % "0.3.0",
       "dev.zio"              %% "zio-macros"                      % "2.0.4",
+      "dev.zio"              %% "zio-config"                      % "3.0.2",
+      "dev.zio"              %% "zio-config-typesafe"             % "3.0.2",
+      "dev.zio"              %% "zio-config-magnolia"             % "3.0.2",
       "org.postgresql"        % "postgresql"                      % "42.3.1",
       "org.liquibase"         % "liquibase-core"                  % "4.17.1",
       "com.dimafeng"         %% "testcontainers-scala-mysql"      % "0.36.0"  % Test,

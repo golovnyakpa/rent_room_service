@@ -13,10 +13,10 @@ object AppClient extends ZIOAppDefault {
 
   val env: ZLayer[Any, Nothing, ChannelFactory with EventLoopGroup] = ChannelFactory.auto ++ EventLoopGroup.auto()
 
-  val testRoomNum = "1.0.221"
+  val testRoomNum = "1.0.226"
   val testUser    = Option("test_user")
   val formatter   = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm")
-  val baseDate    = "20220214"
+  val baseDate    = "20220218"
   val rent1Date =
     (LocalDateTime.parse(s"$baseDate 01:00", formatter), LocalDateTime.parse(s"$baseDate 01:30", formatter))
   val rent2Date =
@@ -43,18 +43,17 @@ object AppClient extends ZIOAppDefault {
     for {
       rentRoomReq <- registerAndLogin(testUser.get, "test_password")
 
-//      _ <- Scenarios.registerNewRoom(rentRoomRequests, testRoomNum)
-//      _ <- Scenarios.addNewRent(rentRoomRequests, rent1, rent2, false)
-//      _ <- Scenarios.addNewRent(rentRoomRequests, rent1, rent3, true)
-//      _ <- Scenarios.updateExistingRent(rentRoomRequests, rent1, updatedRent)
-//      _ <- Scenarios.updateExistingRent(rentRoomRequests, rent1, rent2, updatedRentOverlapping)
-//      _ <- Scenarios.deleteExistingRent(rentRoomRequests, rent1)
-
-      rentRoomReq2 <- registerAndLogin("qwerty", "test_password")
-//      _ <- Scenarios.deleteSomeoneElseRent(rentRoomReq, rentRoomReq2, rent1)
-
+      _ <- Scenarios.registerNewRoom(rentRoomReq, testRoomNum)
       _ <- Scenarios.addNewRent(rentRoomReq, rent1, rent2, false)
-      _ <- Scenarios.addNewRent(rentRoomReq2, rent1, rent2, false)
+      _ <- Scenarios.addNewRent(rentRoomReq, rent1, rent3, true)
+      _ <- Scenarios.updateExistingRent(rentRoomReq, rent1, rent2, updatedRentOverlapping)
+      _ <- Scenarios.deleteExistingRent(rentRoomReq, rent1)
+//
+//      rentRoomReq2 <- registerAndLogin("qwerty", "test_password")
+//      _ <- Scenarios.deleteSomeoneElseRent(rentRoomReq, rentRoomReq2, rent1)
+//
+//      _ <- Scenarios.addNewRent(rentRoomReq, rent1, rent2, false)
+//      _ <- Scenarios.addNewRent(rentRoomReq2, rent1, rent2, false)
 
     } yield ()
 
