@@ -18,8 +18,8 @@ package object db_access {
   def registerUser(user: User): IO[Either[String, Int]] = {
     val passwordHash = hashPassword(user.password)
 
-    val q = sql"insert into users (login, password) values (${user.login}, $passwordHash)"
-      .updateWithLogHandler(LogHandler.jdkLogHandler)
+    val q: doobie.Update0 = sql"insert into users (login, password) values (${user.login}, $passwordHash)".update
+//      .updateWithLogHandler(LogHandler.jdkLogHandler)
 
     q.run.transact(xa).attemptSomeSqlState {
       case sqlstate.class23.UNIQUE_VIOLATION => "User with such login already exists"
@@ -28,8 +28,8 @@ package object db_access {
   }
 
   def getUserByLogin(login: String): IO[Either[String, List[User]]] =
-    sql"select login, password from users where login = $login"
-      .queryWithLogHandler[User](LogHandler.jdkLogHandler)
+    sql"select login, password from users where login = $login".query[User]
+//      .queryWithLogHandler[User](LogHandler.jdkLogHandler)
       .to[List]
       .transact(xa)
       .attemptSomeSqlState { case e @ _ =>

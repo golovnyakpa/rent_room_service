@@ -1,16 +1,18 @@
 package my.meetings_room_renter
 package auth_microservice
 
-import cats.data.EitherT
+import cats.data.{EitherT, Kleisli}
 import cats.effect._
 import my.meetings_room_renter.auth_microservice.requests_handlers._
 import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.implicits._
+import org.http4s.client.middleware.ResponseLogger
+import org.http4s.server.Router
 
 object AuthApi {
 
-  val authApi = HttpRoutes
+  val authApi: HttpRoutes[IO] = HttpRoutes
     .of[IO] {
       case req @ POST -> Root / "user" / "register" =>
         val res: EitherT[IO, String, String] = handleRegisterRequest(req)
@@ -24,5 +26,5 @@ object AuthApi {
           case Right(value) => Ok(giveJwt(value.login))
         }
     }
-    .orNotFound
+
 }

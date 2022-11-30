@@ -12,7 +12,7 @@ object AuthApp extends IOApp {
     .default[IO]
     .withHost(ipv4"0.0.0.0")
     .withPort(port"9091")
-    .withHttpApp(authApi)
+    .withHttpApp(logRequestMiddleware(authApi).orNotFound)
     .build
     .use(_ => IO.never)
     .as(ExitCode.Success)
