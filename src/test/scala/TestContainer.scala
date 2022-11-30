@@ -41,7 +41,7 @@ object TestContainer {
       } yield ds
     }
 
-  private def insertIntoSeq[T : ClassTag](lst: Array[T], i: Int, el: T): Array[T] = {
+  private def insertIntoSeq[T: ClassTag](lst: Array[T], i: Int, el: T): Array[T] = {
     val (front, back) = lst.splitAt(i)
     front ++ Array(el) ++ back
   }
